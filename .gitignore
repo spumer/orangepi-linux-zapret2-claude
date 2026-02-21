@@ -1,5 +1,6 @@
-# Claude Code
-.claude/
+# Claude Code (keep skills in repo, ignore the rest)
+.claude/*
+!.claude/skills/
 
 # zapret2 upstream (separate repo, installed at /opt/zapret2)
 zapret2/
