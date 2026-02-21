@@ -1,0 +1,8 @@
+# Claude Code
+.claude/
+
+# zapret2 upstream (separate repo, installed at /opt/zapret2)
+zapret2/
+
+# Flowseal lists and binaries (managed separately)
+zapret-latest/
