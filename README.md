@@ -22,6 +22,8 @@ Orange Pi handles:
 - **DPI bypass** — nfqws2 with POSTNAT scheme (fake + multisplit + seqovl)
 - **DHCP server** — dnsmasq on the LAN interface
 
+Bypassed services: **YouTube**, **Discord** (text + voice/video), **Telegram** (messages + calls + MTProto proxy).
+
 ### Why NAT instead of bridge?
 
 On a transparent bridge, key DPI bypass techniques **do not work**: `fake`, `fakedsplit`, `seqovl`, `wssize`. The root cause is a timing mismatch between the raw socket (OUTPUT chain) and NF_ACCEPT (FORWARD chain). NAT mode eliminates this limitation — all zapret2 techniques are available.
@@ -34,6 +36,8 @@ Detailed bridge vs NAT comparison — in the [deployment guide](docs/deployment-
 main_script.sh              # NAT + nftables + nfqws2 launcher
 strategies/                  # Modular DPI bypass strategies
   flowseal_fake_tls_auto_alt2.sh
+lists/                       # Custom IP/domain lists (tracked in git)
+  ipset-telegram.txt          # Telegram DC IP ranges
 conf.env                     # Configuration (interfaces, IPs, active strategy)
 nat-setup.sh                 # One-time network setup
 stop_and_clean_nft.sh        # Stop nfqws2 and clean nftables
@@ -86,6 +90,7 @@ sudo systemctl enable --now zapret_discord_youtube
 ```bash
 curl -s --max-time 10 -o /dev/null -w '%{http_code}\n' https://youtube.com   # 200
 curl -s --max-time 10 -o /dev/null -w '%{http_code}\n' https://discord.com   # 200
+curl -s --max-time 10 -o /dev/null -w '%{http_code}\n' https://web.telegram.org  # 200
 ```
 
 ### Strategies
@@ -132,6 +137,8 @@ Orange Pi выполняет:
 - **DPI bypass** — nfqws2 с POSTNAT-схемой (fake + multisplit + seqovl)
 - **DHCP-сервер** — dnsmasq на LAN-интерфейсе
 
+Обходимые сервисы: **YouTube**, **Discord** (текст + голос/видео), **Telegram** (сообщения + звонки + MTProto-прокси).
+
 ### Почему NAT, а не bridge?
 
 На прозрачном мосту (bridge) **не работают** ключевые техники обхода DPI: `fake`, `fakedsplit`, `seqovl`, `wssize`. Причина — разница тайминга между raw socket (OUTPUT) и NF_ACCEPT (FORWARD). NAT-режим снимает это ограничение, все техники zapret2 доступны.
@@ -144,6 +151,8 @@ Orange Pi выполняет:
 main_script.sh              # NAT + nftables + запуск nfqws2
 strategies/                  # Стратегии DPI bypass (модульные)
   flowseal_fake_tls_auto_alt2.sh
+lists/                       # Пользовательские IP/домен листы (в git)
+  ipset-telegram.txt          # IP-диапазоны Telegram DC
 conf.env                     # Конфигурация (интерфейсы, IP, активная стратегия)
 nat-setup.sh                 # Одноразовая настройка сети
 stop_and_clean_nft.sh        # Остановка и очистка
@@ -196,6 +205,7 @@ sudo systemctl enable --now zapret_discord_youtube
 ```bash
 curl -s --max-time 10 -o /dev/null -w '%{http_code}\n' https://youtube.com   # 200
 curl -s --max-time 10 -o /dev/null -w '%{http_code}\n' https://discord.com   # 200
+curl -s --max-time 10 -o /dev/null -w '%{http_code}\n' https://web.telegram.org  # 200
 ```
 
 ### Стратегии
@@ -212,7 +222,7 @@ sudo systemctl restart zapret_discord_youtube
 
 ### Документация
 
-- **[Deployment Guide](docs/deployment-guide.md)** — полная инструкция: топология, bridge vs NAT, настройка сети, стратегии, перевод Flowseal, грабли, диагностика
+- **[Deployment Guide](docs/deployment-guide.md)** — полная инструкция: топология, bridge vs NAT, настройка сети, стратегии, Telegram bypass, перевод Flowseal, грабли, диагностика
 - **[Claude Skill](.claude/skills/zapret/SKILL.md)** — skill для Claude Code с knowledge base по zapret2
 
 ### Требования

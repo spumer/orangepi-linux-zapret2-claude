@@ -73,6 +73,21 @@ wlan0 (192.168.1.73) ← SSH-управление Orange Pi через WiFi Keen
 
 Стратегия встроена в `main_script.sh` → функция `start_nfqws2()`.
 
+### Покрытие сервисов
+
+| Сервис | Протокол | Порты | Метод |
+|--------|----------|-------|-------|
+| YouTube | TLS/QUIC | TCP 443, UDP 443 | fake + multisplit + seqovl |
+| Discord | TLS/QUIC/голос | TCP 443/2053/…, UDP 19294-19344/50000-50100 | fake + multisplit |
+| Telegram (сообщения) | MTProto/TLS | TCP 443 | fake + multisplit (ipset-telegram.txt) |
+| Telegram (звонки) | STUN/UDP | UDP 590-1400, 3478 | fake (stun.bin) |
+| MTProto-прокси | TCP | TCP 49312 | fake + multisplit |
+
+### Пользовательские IP-листы
+
+`lists/ipset-telegram.txt` — IP-диапазоны Telegram DC1-DC5, хранится в репозитории.
+Переменная `TELEGRAM_IPSET=$BASE_DIR/lists/ipset-telegram.txt` задаётся в стратегии.
+
 ### Запуск/остановка
 
 ```bash

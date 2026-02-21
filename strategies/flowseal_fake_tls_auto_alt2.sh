@@ -3,9 +3,10 @@
 #
 # Source: zapret-latest/general (FAKE TLS AUTO ALT2).bat
 # Tested: 2026-02-20, YouTube + Discord working
+# Updated: 2026-02-21, added Telegram (MTProto + calls) + MTProto proxy support
 
-TCP_PORTS="80,443,2053,2083,2087,2096,8443"
-UDP_PORTS="443,19294-19344,50000-50100"
+TCP_PORTS="80,443,2053,2083,2087,2096,8443,49312"
+UDP_PORTS="443,590-1400,3478,19294-19344,50000-50100"
 
 BLOB_OPTS="\
 --blob=quic_google:@$NFQWS2_FAKES/quic_initial_www_google_com.bin \
@@ -14,12 +15,20 @@ BLOB_OPTS="\
 --blob=zero_256:@$NFQWS2_FAKES/zero_256.bin \
 --blob=stun:@$NFQWS2_FAKES/stun.bin"
 
+TELEGRAM_IPSET="$BASE_DIR/lists/ipset-telegram.txt"
+
 read -r -d '' STRATEGY << 'EOF' || true
 --filter-udp=443 --filter-l7=quic --hostlist=$LISTS_DIR/list-general.txt --hostlist-exclude=$LISTS_DIR/list-exclude.txt --ipset-exclude=$LISTS_DIR/ipset-exclude.txt --payload=quic_initial --lua-desync=fake:blob=quic_google:repeats=11
+--new
+--filter-udp=590-1400,3478 --filter-l7=stun --lua-desync=fake:blob=stun:repeats=6
 --new
 --filter-udp=19294-19344,50000-50100 --filter-l7=discord,stun --lua-desync=fake:blob=zero_256:repeats=6
 --new
 --filter-tcp=2053,2083,2087,2096,8443 --hostlist-domains=discord.media --lua-desync=fake:blob=fake_default_tls:tcp_seq=10000000:repeats=8:tls_mod=rnd,dupsid,sni=www.google.com --lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=tls_google
+--new
+--filter-tcp=443 --filter-l7=tls --ipset=$TELEGRAM_IPSET --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_seq=10000000:repeats=8:tls_mod=rnd,dupsid,sni=www.google.com --lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=tls_google
+--new
+--filter-tcp=49312 --lua-desync=fake:blob=fake_default_tls:tcp_seq=10000000:repeats=8:tls_mod=rnd,dupsid,sni=www.google.com --lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=tls_google
 --new
 --filter-tcp=443 --filter-l7=tls --hostlist=$LISTS_DIR/list-google.txt --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_seq=10000000:repeats=8:tls_mod=rnd,dupsid,sni=www.google.com:ip_id=zero --lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=tls_google:ip_id=zero
 --new
