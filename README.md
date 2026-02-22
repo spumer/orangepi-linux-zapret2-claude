@@ -110,6 +110,27 @@ More on creating strategies and translating Flowseal .bat → zapret2 — in the
 - **[Deployment Guide](docs/deployment-guide.md)** — full instructions: topology, bridge vs NAT, network setup, strategies, Flowseal translation, gotchas, diagnostics
 - **[Claude Skill](.claude/skills/zapret/SKILL.md)** — Claude Code skill with zapret2 knowledge base
 
+### Troubleshooting: service doesn't work through zapret
+
+If a service (game, website, app) breaks or slows down:
+
+1. **Check if it works without zapret** (`systemctl stop zapret_discord_youtube`)
+   - Works without zapret → zapret is breaking it → **exclude** the service
+   - Broken with or without → ISP/RKN blocking → **add** DPI bypass rules
+
+2. **Search GitHub issues** for known solutions:
+   - [Flowseal issues](https://github.com/Flowseal/zapret-discord-youtube/issues) — most common problems are already solved
+   - [zapret2 issues](https://github.com/bol-van/zapret2/issues)
+   - [zapret (v1) issues](https://github.com/bol-van/zapret/issues)
+
+3. **If zapret breaks the service** — exclude from processing:
+   - Find service IPs: `grep '<ip_prefix>' zapret-latest/lists/ipset-all.txt`
+   - Add domains to `zapret-latest/lists/list-exclude.txt`
+   - Add IP ranges to `zapret-latest/lists/ipset-exclude.txt`
+   - `systemctl restart zapret_discord_youtube`
+
+4. **If ISP blocks the service** — add bypass rules to the strategy (see [deployment guide](docs/deployment-guide.md))
+
 ### Requirements
 
 - Linux SBC with 2 ethernet interfaces
@@ -224,6 +245,27 @@ sudo systemctl restart zapret_discord_youtube
 
 - **[Deployment Guide](docs/deployment-guide.md)** — полная инструкция: топология, bridge vs NAT, настройка сети, стратегии, Telegram bypass, перевод Flowseal, грабли, диагностика
 - **[Claude Skill](.claude/skills/zapret/SKILL.md)** — skill для Claude Code с knowledge base по zapret2
+
+### Траблшутинг: сервис не работает через zapret
+
+Если сервис (игра, сайт, приложение) перестаёт работать или тормозит:
+
+1. **Проверь, работает ли без zapret** (`systemctl stop zapret_discord_youtube`)
+   - Без zapret работает → zapret ломает трафик → нужно **исключить** сервис
+   - Не работает и без zapret → блокировка провайдера/РКН → нужно **добавить** обход DPI
+
+2. **Поищи в GitHub issues** — скорее всего решение уже есть:
+   - [Flowseal issues](https://github.com/Flowseal/zapret-discord-youtube/issues) — самый частый источник решений
+   - [zapret2 issues](https://github.com/bol-van/zapret2/issues)
+   - [zapret (v1) issues](https://github.com/bol-van/zapret/issues)
+
+3. **Если zapret ломает сервис** — исключить из обработки:
+   - Найди IP сервиса: `grep '<префикс>' zapret-latest/lists/ipset-all.txt`
+   - Добавь домены в `zapret-latest/lists/list-exclude.txt`
+   - Добавь IP-диапазоны в `zapret-latest/lists/ipset-exclude.txt`
+   - `systemctl restart zapret_discord_youtube`
+
+4. **Если блокирует провайдер** — добавь правила обхода в стратегию (см. [deployment guide](docs/deployment-guide.md))
 
 ### Требования
 

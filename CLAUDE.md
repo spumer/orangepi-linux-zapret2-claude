@@ -137,8 +137,54 @@ cat /var/lib/misc/dnsmasq.leases
 journalctl -u NetworkManager -f
 ```
 
+## Траблшутинг: сервис/приложение не работает через zapret
+
+Когда пользователь сообщает что какой-то сервис (Steam, игра, сайт) не работает или работает медленно — следуй этому порядку:
+
+### 1. Определи причину: zapret ломает или провайдер блокирует?
+
+Спроси пользователя: **работает ли сервис при выключенном zapret?**
+- **Да (без zapret работает)** → zapret ломает трафик сервиса → нужно **исключить** сервис из обработки
+- **Нет (не работает и без zapret)** → блокировка провайдера/РКН → нужно **добавить** обход DPI для сервиса
+
+### 2. Поищи в GitHub issues
+
+Поищи проблему в issues этих репозиториев (через `gh search issues` или веб-поиск):
+- **Flowseal**: `gh search issues --repo Flowseal/zapret-discord-youtube "<сервис>"`
+- **zapret2**: `gh search issues --repo bol-van/zapret2 "<сервис>"`
+- **zapret (v1)**: `gh search issues --repo bol-van/zapret "<сервис>"`
+
+Там часто есть готовые решения: какие домены/IP исключить, какие порты добавить, какую стратегию использовать.
+
+### 3a. Если zapret ломает сервис → исключить из обработки
+
+Типичная причина: IP-адреса сервиса попали в `ipset-all.txt` от Flowseal.
+
+1. Найди IP-диапазоны сервиса (ASN lookup, issues, `nslookup`)
+2. Проверь пересечение: `grep '<prefix>' /opt/zapret-scripts/zapret-latest/lists/ipset-all.txt`
+3. Добавь домены в `zapret-latest/lists/list-exclude.txt`
+4. Добавь IP-диапазоны в `zapret-latest/lists/ipset-exclude.txt`
+5. `systemctl restart zapret_discord_youtube`
+
+Exclude-файлы читаются правилами стратегии с `--hostlist-exclude` и `--ipset-exclude`.
+
+### 3b. Если блокирует провайдер → добавить обход DPI
+
+1. Определи протоколы и порты сервиса (из issues или документации)
+2. Добавь правила в стратегию (`strategies/*.sh`): `--filter-tcp`/`--filter-udp` + `--lua-desync`
+3. Если нужен IP-лист — создай в `lists/` (отслеживается git), не в `zapret-latest/lists/` (gitignored)
+4. Обнови `TCP_PORTS`/`UDP_PORTS` в стратегии
+5. Задеплой и перезапусти сервис
+
+### Пример: Steam (решено)
+
+Steam ломался при включённом zapret. Причина: IP Valve (AS32590) были в `ipset-all.txt`.
+Решение: добавлены домены `steampowered.com`, `steamcommunity.com`, ... в `list-exclude.txt`
+и IP-диапазоны 155.133.x.x, 162.254.x.x, 208.x.x.x в `ipset-exclude.txt`.
+
 ## Известные проблемы
 
 - **USB-адаптер не определяется после перезагрузки:** выполнить `usb_modeswitch` или физически переподключить
 - **Низкая скорость:** убедиться что USB-адаптер в USB 3.0 порту (синий)
 - **Ошибки Tx timeout:** `ethtool -K enx00e04c176c60 tx off`
+- **Steam не работает:** IP Valve попадают в `ipset-all.txt` Flowseal — добавить в `ipset-exclude.txt` (см. траблшутинг выше)
