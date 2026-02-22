@@ -1,0 +1,5 @@
+all:
+  hosts:
+    orangepi:
+      ansible_host: 192.168.1.73
+      ansible_user: root

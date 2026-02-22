@@ -1,0 +1,19 @@
+[Unit]
+Description=DNS Proxy (DoH upstream)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/etc/dnsproxy/upstream.env
+ExecStart=/usr/local/bin/dnsproxy \
+    --listen=127.0.0.1 \
+    --port=5353 \
+    --upstream=${DOH_URL} \
+    --bootstrap=1.1.1.1 \
+    --cache \
+    --cache-size=4096
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

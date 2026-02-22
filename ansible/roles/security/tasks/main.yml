@@ -1,0 +1,8 @@
+- name: Bind SSH to wlan0 interface only
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?ListenAddress 0\.0\.0\.0'
+    line: "ListenAddress {{ ssh_listen_ip }}"
+    state: present
+    validate: sshd -t -f %s
+  notify: reload sshd

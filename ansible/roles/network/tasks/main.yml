@@ -1,0 +1,29 @@
+- name: Configure WAN interface (DHCP from ISP)
+  community.general.nmcli:
+    type: ethernet
+    conn_name: wan
+    ifname: "{{ wan_iface }}"
+    method4: auto
+    autoconnect: true
+    state: present
+
+- name: Configure LAN interface (static IP)
+  community.general.nmcli:
+    type: ethernet
+    conn_name: lan
+    ifname: "{{ lan_iface }}"
+    method4: manual
+    ip4: "{{ lan_ip }}/{{ lan_prefix }}"
+    method6: disabled
+    autoconnect: true
+    state: present
+
+- name: Bring up WAN connection
+  command: nmcli con up wan
+  changed_when: false
+  ignore_errors: true   # may fail if cable not connected yet
+
+- name: Bring up LAN connection
+  command: nmcli con up lan
+  changed_when: false
+  ignore_errors: true

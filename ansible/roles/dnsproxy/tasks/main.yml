@@ -1,0 +1,57 @@
+- name: Create dnsproxy config directory
+  file:
+    path: /etc/dnsproxy
+    state: directory
+    mode: "0755"
+
+- name: Deploy DoH upstream config
+  template:
+    src: upstream.env.j2
+    dest: /etc/dnsproxy/upstream.env
+    mode: "0644"
+  notify: restart dnsproxy
+
+- name: Check if dnsproxy binary exists with correct version
+  command: /usr/local/bin/dnsproxy --version
+  register: dnsproxy_installed
+  changed_when: false
+  failed_when: false
+
+- name: Download dnsproxy archive
+  get_url:
+    url: "https://github.com/AdguardTeam/dnsproxy/releases/download/{{ dnsproxy_version }}/dnsproxy-linux-arm64-{{ dnsproxy_version }}.tar.gz"
+    dest: /tmp/dnsproxy.tar.gz
+    mode: "0644"
+  when: dnsproxy_version not in (dnsproxy_installed.stdout | default(''))
+
+- name: Extract dnsproxy binary
+  unarchive:
+    src: /tmp/dnsproxy.tar.gz
+    dest: /tmp/
+    remote_src: true
+  when: dnsproxy_version not in (dnsproxy_installed.stdout | default(''))
+
+- name: Install dnsproxy binary
+  copy:
+    src: /tmp/linux-arm64/dnsproxy
+    dest: /usr/local/bin/dnsproxy
+    mode: "0755"
+    remote_src: true
+  when: dnsproxy_version not in (dnsproxy_installed.stdout | default(''))
+  notify: restart dnsproxy
+
+- name: Deploy dnsproxy systemd service
+  template:
+    src: dnsproxy.service.j2
+    dest: /etc/systemd/system/dnsproxy.service
+    mode: "0644"
+  notify:
+    - daemon reload
+    - restart dnsproxy
+
+- name: Enable and start dnsproxy
+  systemd:
+    name: dnsproxy
+    enabled: true
+    state: started
+    daemon_reload: true

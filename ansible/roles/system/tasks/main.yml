@@ -1,0 +1,39 @@
+- name: Update apt cache and upgrade packages
+  apt:
+    update_cache: true
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: Install required packages
+  apt:
+    name:
+      - git
+      - curl
+      - dnsmasq
+      - bind9-dnsutils   # dig
+    state: present
+
+- name: Enable IP forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    sysctl_file: /etc/sysctl.d/99-nat.conf
+    reload: true
+
+- name: Disable usbdevice service (spawns adbd on port 5555)
+  systemd:
+    name: usbdevice
+    state: stopped
+    enabled: false
+  ignore_errors: true   # service may not exist on all boards
+
+- name: Disable rpcbind service
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop:
+    - rpcbind
+    - rpcbind.socket
+  ignore_errors: true

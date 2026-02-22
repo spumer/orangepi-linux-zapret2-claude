@@ -1,0 +1,89 @@
+- name: Create zapret-scripts directory
+  file:
+    path: "{{ zapret_scripts_dir }}"
+    state: directory
+    mode: "0755"
+
+# Sync project files from Ansible controller to Orange Pi
+# Excludes: git metadata, ansible dir itself, claude artifacts
+- name: Sync project files to Orange Pi
+  ansible.posix.synchronize:
+    src: "{{ playbook_dir }}/../"
+    dest: "{{ zapret_scripts_dir }}/"
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=ansible"
+      - "--exclude=.claude"
+      - "--exclude=*.md"    # docs are not needed on device
+    delete: false
+
+- name: Deploy conf.env from template
+  template:
+    src: conf.env.j2
+    dest: "{{ zapret_scripts_dir }}/conf.env"
+    mode: "0644"
+
+- name: Make scripts executable
+  file:
+    path: "{{ zapret_scripts_dir }}/{{ item }}"
+    mode: "0755"
+  loop:
+    - main_script.sh
+    - stop_and_clean_nft.sh
+    - nat-setup.sh
+
+# ── Flowseal lists ────────────────────────────────────────────────────────────
+
+- name: Check if Flowseal lists already exist
+  stat:
+    path: "{{ zapret_scripts_dir }}/zapret-latest/lists/list-general.txt"
+  register: flowseal_lists
+
+- name: Clone Flowseal repository (for lists and bin files)
+  git:
+    repo: "{{ flowseal_repo }}"
+    dest: /tmp/flowseal-src
+    depth: 1
+  when: not flowseal_lists.stat.exists
+
+- name: Create zapret-latest directories
+  file:
+    path: "{{ zapret_scripts_dir }}/zapret-latest/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - lists
+    - bin
+  when: not flowseal_lists.stat.exists
+
+- name: Copy Flowseal lists
+  shell: |
+    cp -r /tmp/flowseal-src/lists/. {{ zapret_scripts_dir }}/zapret-latest/lists/
+  args:
+    creates: "{{ zapret_scripts_dir }}/zapret-latest/lists/list-general.txt"
+  when: not flowseal_lists.stat.exists
+
+- name: Copy Flowseal bin files
+  shell: |
+    cp -r /tmp/flowseal-src/bin/. {{ zapret_scripts_dir }}/zapret-latest/bin/
+  args:
+    creates: "{{ zapret_scripts_dir }}/zapret-latest/bin"
+  when: not flowseal_lists.stat.exists
+
+# ── systemd service ───────────────────────────────────────────────────────────
+
+- name: Deploy zapret systemd service
+  template:
+    src: zapret_discord_youtube.service.j2
+    dest: /etc/systemd/system/zapret_discord_youtube.service
+    mode: "0644"
+  notify:
+    - daemon reload
+    - restart zapret
+
+- name: Enable and start zapret service
+  systemd:
+    name: zapret_discord_youtube
+    enabled: true
+    state: started
+    daemon_reload: true

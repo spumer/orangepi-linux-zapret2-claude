@@ -1,0 +1,14 @@
+- name: Deploy dnsmasq LAN config
+  template:
+    src: lan.conf.j2
+    dest: /etc/dnsmasq.d/lan.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart dnsmasq
+
+- name: Enable and start dnsmasq
+  systemd:
+    name: dnsmasq
+    enabled: true
+    state: started

@@ -1,0 +1,25 @@
+# Network interfaces
+wan_iface: enx00e04c176c60
+lan_iface: eth0
+
+# LAN / DHCP
+lan_ip: 10.10.10.1
+lan_prefix: 24
+dhcp_range_start: 10.10.10.100
+dhcp_range_end: 10.10.10.200
+keenetic_mac: "50:ff:20:7a:5d:ac"
+keenetic_ip: 10.10.10.190
+
+# SSH hardening — bind to wlan0 IP only
+ssh_listen_ip: 192.168.1.73
+
+# DNS over HTTPS — change this to switch DoH provider
+doh_url: https://xbox-dns.ru/dns-query
+dnsproxy_version: v0.79.0
+
+# zapret
+zapret2_repo: https://github.com/bol-van/zapret2.git
+zapret2_dir: /opt/zapret2
+zapret_scripts_dir: /opt/zapret-scripts
+active_strategy: flowseal_fake_tls_auto_alt2
+flowseal_repo: https://github.com/Flowseal/zapret-discord-youtube.git

@@ -1,0 +1,15 @@
+[Unit]
+Description=Zapret2 DPI Bypass (NAT Router Mode)
+After=network-online.target dnsproxy.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory={{ zapret_scripts_dir }}
+ExecStart=/usr/bin/env bash {{ zapret_scripts_dir }}/main_script.sh
+ExecStop=/usr/bin/env bash {{ zapret_scripts_dir }}/stop_and_clean_nft.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+- hosts: orangepi
+  gather_facts: true
+  roles:
+    - role: system
+      tags: system
+    - role: network
+      tags: network
+    - role: security
+      tags: security
+    - role: dnsmasq
+      tags: dnsmasq
+    - role: dnsproxy
+      tags: dnsproxy
+    - role: zapret2
+      tags: zapret2
+    - role: zapret_scripts
+      tags: zapret_scripts
